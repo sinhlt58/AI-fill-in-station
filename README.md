@@ -36,7 +36,7 @@ Gần giống hàm trên nhưng thay vì chỉ tính với biến bên trái ta 
 #### Các câu lệnh chạy  
 Giải 2 input của để bài  
 `python fillstation.py -p 1 -f -m -h greedy -d`  
-+ flag `-p 1` là đầu bài 1 (thay 1 bằng 2 để giả đầu bài 2)  
++ flag `-p 1` là đầu bài 1 (thay 1 bằng 2 để giải đầu bài 2)  
 + flag `-f` là dùng forward checking  
 + flag `-m` là dùng most constrained variable  
 + flag `-h greedy` là dùng hàm greedy
