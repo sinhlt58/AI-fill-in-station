@@ -1,3 +1,4 @@
+from __future__ import division
 class Niceprint:
     @classmethod
     def print_first_row(self, cells, n):
@@ -42,25 +43,27 @@ class Niceprint:
             print '\n'
 
     @classmethod
-    def print_row_compare(self, info):
+    def print_row_compare(self, info, number_of_input):
         n = len(info)
         first_row_cells = ["problem", "grd_nodes", "b_grd_nodes", "grd_time", "b_grd_time", "grd_ebf", "b_grd_ebf"]
         self.print_first_row(first_row_cells, 85)
         for i in range(n):
             cells = ['' for k in range(len(first_row_cells))]
             cells[0] = str(i + 1)
-            for j in range(4):
+            for j in range(6):
                 cells[j+1] = str(info[i][j])
-            cells[5] = ''
-            cells[6] = ''
+            
+            #cells[5] = str(round(info[i][0]**(1/9),9))
+            #cells[6] = str(round(info[i][1]**(1/9),9))
             self.print_row(cells)
         self.print_dashes(85)
         avarage_row = ["avg"]
-        for k in range(4):
+        for k in range(6):
             s = 0
             for t in range(n):
                 s += info[t][k]
-            avarage_row.append(str(s))
+            s = s/number_of_input
+            avarage_row.append(str(round(s,8)))
         self.print_row(avarage_row)
         self.print_dashes(85)
                 

@@ -1,3 +1,9 @@
+from __future__ import division
+import time
+import sys
+import getopt
+from random import randint
+
 from in_put import Input
 from niceprint import Niceprint
 from util import PriorityQueue
@@ -6,10 +12,6 @@ from constraint import Constraint
 from csp import Csp
 from domain import Domain
 
-import time
-import sys
-import getopt
-from random import randint
 
 def is_consitency_value(assignment, csp, x, v):
     if not assignment.is_diff_all(v):
@@ -91,8 +93,8 @@ def better_heristic_domain(assignment, csp, domain, x):
     number_of_bi_cstrs = len(binary_constraints)
 
     for v in domain[x]:
-        f = 1
-        avarage_f = 1
+        f = 0
+        avarage_f = 0
         if number_of_bi_cstrs > 0:
             for bi_c in binary_constraints:
                 pair = ''
@@ -102,12 +104,11 @@ def better_heristic_domain(assignment, csp, domain, x):
                     else:
                         pair += assignment.value_to_letter(v)
               
-                f *= csp.frequecy_list[pair]
-            avarage_f = f
+                f += csp.frequecy_list[pair]
+            avarage_f = f/number_of_bi_cstrs
         else:
             pair = '$' + assignment.value_to_letter(v)
-           
-            avarage_f *= csp.frequecy_list[pair]
+            avarage_f += csp.frequecy_list[pair]
 
         priority_queue.push((v, avarage_f), -avarage_f)
 
@@ -246,8 +247,10 @@ def main(argv):
             a2, c2 = result_better_greedy
             total_time1 = finished_time1 - start_time1
             total_time2 = finished_time2 - start_time2
-            info.append((c1.number_expanded_nodes, c2.number_expanded_nodes, round(total_time1,9), round(total_time2,9)))
-        Niceprint.print_row_compare(info)
+            ebf1 = c1.number_expanded_nodes**(1/9)
+            ebf2 = c2.number_expanded_nodes**(1/9)
+            info.append((c1.number_expanded_nodes, c2.number_expanded_nodes, round(total_time1,9), round(total_time2,9), round(ebf1,9), round(ebf2,9)))
+        Niceprint.print_row_compare(info,number_compare_inputs)
     else:
         letters = source.get_letter_matrix("letters")
         start_time = time.time()
