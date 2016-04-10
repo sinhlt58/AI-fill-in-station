@@ -39,7 +39,7 @@ Giải 2 input của để bài
 + flag `-p 1` là đầu bài 1 (thay 1 bằng 2 để giải đầu bài 2)  
 + flag `-f` là dùng forward checking  
 + flag `-m` là dùng most constrained variable  
-+ flag `-h greedy` là dùng hàm greedy
++ flag `-h greedy` là dùng hàm greedy (thay bằng `-h better_greedy` để chạy hàm greedy tốt hơn 1 chút)
 + flag `-d` bật chể độ debug (bỏ flag -d đi đẻ tắt chế độ debug)
 
 So sánh hiệu năng giữa các hàm heuristic  
