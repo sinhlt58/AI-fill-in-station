@@ -16,18 +16,26 @@ from domain import Domain
 def is_consitency_value(assignment, csp, x, v):
     if not assignment.is_diff_all(v):
         return False
+
     all_constraints_of_x = csp.get_constraint_of_variable(x)
     filtered_constraints = assignment.filter_constraints(x, all_constraints_of_x)
     for c in filtered_constraints:
         w = ''
+        bi_pair_node = None
         for node in c:
             if node != x:
+                bi_pair_node = node
                 w += assignment.value_to_letter(assignment.get_value(node))
             else:
                 w += assignment.value_to_letter(v)
         if len(w) == assignment.length-1:
-            if not csp.is_positive_frequency(w):
-                return False
+            if csp.is_use_better_greedy():
+                pair_position = csp.get_position_pair(x, bi_pair_node)
+                if not csp.is_positive_frequency_by_position(w, pair_position):
+                    return False
+            else:
+                if not csp.is_normal_positive_frequency(w):
+                    return False
         if len(w) == assignment.length:
             if not csp.is_in_dictionary(w):
                 return False
@@ -72,7 +80,7 @@ def greedy_heristic_domain(assignment, csp, domain, x):
         letter_left_neighbor = assignment.value_to_letter(value_l_neighbor)
     for v in domain[x]:
         pair = letter_left_neighbor + assignment.value_to_letter(v) 
-        frequeyncy = csp.frequecy_list[pair]
+        frequeyncy = csp.get_normal_pair_frequency(pair)
         priority_queue.push((v, frequeyncy), -frequeyncy)
     while not priority_queue.isEmpty():
         v, f = priority_queue.pop()
@@ -81,6 +89,32 @@ def greedy_heristic_domain(assignment, csp, domain, x):
     return result, greedy_info
 
 def better_heristic_domain(assignment, csp, domain, x):
+    result = []
+    greedy_info = []
+    priority_queue = PriorityQueue()
+    left_neighbor = assignment.get_left_neighbor(x) 
+    letter_left_neighbor = ''
+
+    if left_neighbor is None:
+        letter_left_neighbor = '$'
+    else:
+        value_l_neighbor = assignment.get_value(left_neighbor)
+        letter_left_neighbor = assignment.value_to_letter(value_l_neighbor)
+
+    for v in domain[x]:
+        pair = letter_left_neighbor + assignment.value_to_letter(v)
+        pair_position = csp.get_position_pair(x, left_neighbor)
+        frequeyncy = csp.get_new_pair_frequency(pair, pair_position)
+        priority_queue.push((v, frequeyncy), -frequeyncy)
+
+    while not priority_queue.isEmpty():
+        v, f = priority_queue.pop()
+        result.append(v)
+        greedy_info.append(f)
+    return result, greedy_info
+
+
+def more_better_heristic_domain(assignment, csp, domain, x):
     result = []
     greedy_info = []
     priority_queue = PriorityQueue()
@@ -93,22 +127,25 @@ def better_heristic_domain(assignment, csp, domain, x):
     number_of_bi_cstrs = len(binary_constraints)
 
     for v in domain[x]:
-        f = 0
-        avarage_f = 0
+        f = 1
+        avarage_f = 1
+        pair_node = None
         if number_of_bi_cstrs > 0:
             for bi_c in binary_constraints:
                 pair = ''
                 for node in bi_c:
                     if node != x:
+                        pair_node = node
                         pair += assignment.value_to_letter(assignment.get_value(node))
                     else:
                         pair += assignment.value_to_letter(v)
-              
-                f += csp.frequecy_list[pair]
-            avarage_f = f/number_of_bi_cstrs
+
+                pair_position = csp.get_position_pair(pair_node, x)
+                f *= csp.get_new_pair_frequency(pair, pair_position)
+            avarage_f = f
         else:
             pair = '$' + assignment.value_to_letter(v)
-            avarage_f += csp.frequecy_list[pair]
+            avarage_f *= csp.get_normal_pair_frequency(pair)
 
         priority_queue.push((v, avarage_f), -avarage_f)
 
@@ -117,6 +154,7 @@ def better_heristic_domain(assignment, csp, domain, x):
         result.append(v)
         greedy_info.append(f)
     return result, greedy_info
+
 
 def minimum_remaining_value(assignment, csp, domain, x):
     result = []
@@ -157,8 +195,8 @@ def get_domain_by_variable(assignment, csp, domain, x):
         return greedy_heristic_domain(assignment, csp, domain, x)
     if (csp.value_heuristic == "better_greedy"):
         return better_heristic_domain(assignment, csp, domain, x)
-    if (csp.value_heuristic == "mrv"):
-        return minimum_remaining_value(assignment, csp, domain, x), []
+    if (csp.value_heuristic == "more_better"):
+        return more_better_heristic_domain(assignment, csp, domain, x)
 
 def back_track(assignment, csp, domain):
     csp.number_expanded_nodes += 1
@@ -188,15 +226,22 @@ def back_track(assignment, csp, domain):
             assignment.unassign(x)
     return False
 
-def back_tracking(dictionary, frequecy_list, letters, debug, value_heuristic="no", most_variable="no", fwck=0):
+def back_tracking(letters, debug, value_heuristic="no", most_variable="no", fwck=0):
+    dictionary, frequecy_list = Input.get_source()
+
+    if value_heuristic == "better_greedy" or value_heuristic == "more_better":
+        frequecy_list = Input.get_new_frequency_list('new_freq_list')
+
     assignment = Assignment(letters, 3)
     constraints = Constraint(3)
     csp = Csp(dictionary, frequecy_list, constraints)
+
     csp.debug = debug
     csp.value_heuristic = value_heuristic
     csp.most_variable = most_variable
     csp.fwck = fwck
     domain = Domain.get_default_domain(3)
+
     return back_track(assignment, csp, domain)
 
 def main(argv):
@@ -229,19 +274,16 @@ def main(argv):
         if flag == '-n':
             number_compare_inputs = int(value)
 
-    source = Input()
-    dictionary, frequecy_list = source.get_source()
-
     if(compare_mode):
-        lot_of_letters = source.get_letter_matrix("1000_inputs")
+        lot_of_letters = Input.get_letter_matrix("1000_inputs")
         info = []
         r = randint(0, 900)
         for p in lot_of_letters[r:(r+number_compare_inputs)]:
             start_time1 = time.time()
-            result_greedy = back_tracking(dictionary, frequecy_list, p, 0, "greedy", most_variable, fwck)
+            result_greedy = back_tracking(p, 0, "greedy", most_variable, fwck)
             finished_time1 = time.time()
             start_time2 = time.time()
-            result_better_greedy = back_tracking(dictionary, frequecy_list, p, 0, "better_greedy", most_variable, fwck)
+            result_better_greedy = back_tracking(p, 0, "more_better", most_variable, fwck)
             finished_time2 = time.time()
             a1, c1 = result_greedy
             a2, c2 = result_better_greedy
@@ -252,9 +294,10 @@ def main(argv):
             info.append((c1.number_expanded_nodes, c2.number_expanded_nodes, round(total_time1,9), round(total_time2,9), round(ebf1,9), round(ebf2,9)))
         Niceprint.print_row_compare(info,number_compare_inputs)
     else:
-        letters = source.get_letter_matrix("letters")
+        letters = Input.get_letter_matrix("letters")
         start_time = time.time()
-        result = back_tracking(dictionary, frequecy_list, letters[problem-1], debug, value_heuristic, most_variable, fwck)
+      
+        result = back_tracking(letters[problem-1], debug, value_heuristic, most_variable, fwck)
         finished_time = time.time()
         if result:
             a, c = result
@@ -265,6 +308,7 @@ def main(argv):
         else:
             print 
             print "No solution"
+    
 
 if __name__ == "__main__":
     main(sys.argv[1:])

@@ -34,9 +34,11 @@ class Niceprint:
                     cells[2] = str(csp.number_expanded_nodes)
                     cells[3] = str(next_x)
                 cells[4] = ''
+                cells[5] = ''
                 if i >= 0 and i < len(order_domain):
-                    cells[4] += assignment.value_to_letter(order_domain[i])
-                    cells[5] = str(round(greedy_info[i], 9))
+                    if len(greedy_info) > 0:
+                        cells[4] = assignment.value_to_letter(order_domain[i])
+                        cells[5] = str(round(greedy_info[i], 9))
                 self.print_row(cells)
             
             self.print_dashes(73)

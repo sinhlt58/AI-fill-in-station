@@ -2,6 +2,7 @@ import string
 import random
 
 class Input:
+    @classmethod
     def get_dictionary(self):
         file1 = open('3_letters_dictionary')
         dictionary = []
@@ -10,7 +11,10 @@ class Input:
                 dictionary.append(line[0:3])
         return dictionary
 
+    @classmethod
     def get_frequency_list(self):
+        return self.get_new_frequency_list("bigram_frequence_list")
+        """
         file2 = open('bigram_frequence_list')
         frequency_list = {}
         with file2 as f:
@@ -18,7 +22,24 @@ class Input:
                 actLen = len(line) - 1
                 frequency_list[line[0]+line[2]] = float(line[4:actLen])
         return frequency_list
+        """
+    @classmethod
+    def get_new_frequency_list(self, filename):
+        file1 = open(filename)
+        frequency_list = {}
+        with file1 as f:
+            for line in f:
+                pair_freq = []
+                actLen = len(line)-1
+                line = line[:actLen]
+                array_line = line.split()
+                pair = array_line[0] + array_line[1]
+                for i in range(2, len(array_line)):
+                    pair_freq.append(float(array_line[i]))
+                frequency_list[pair] = pair_freq
+        return frequency_list
 
+    @classmethod
     def get_letter_matrix(self, file_name):
         file1 = open(file_name)
         letters = []
@@ -29,24 +50,7 @@ class Input:
                 letters.append(s)
         return letters
 
-    def generate_lines(self, number_of_lines):
-        file1 = open('generating_file', 'w')
-        letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        n = 9
-        for i in range(number_of_lines):
-            line = ''
-            for j in range(n):
-                line += random.choice(letters)
-            file1.write(line + '\n')
-
-    def generate_line(self):
-        letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        line = ''
-        n = 9
-        for i in range(n):
-            line += random.choice(letters)
-        return line
-
+    @classmethod
     def convert_line_to_matrix(self, line):
         s = []
         for i in range(3):
@@ -56,9 +60,6 @@ class Input:
             s.append(w)
         return s
 
-    def generate_in_put(self):
-        line = self.generate_line()
-        return self.convert_line_to_matrix(line)
-
+    @classmethod
     def get_source(self):
         return self.get_dictionary(), self.get_frequency_list()
