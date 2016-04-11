@@ -58,6 +58,7 @@ Ta sẽ so sánh hàm `greedy_heristic_domain` và `more_better_heristic_domain`
 `python fillstation.py -c -n 10 -f -m` (Dùng `-f` và `-m`)     
 + flag `-c` để chạy chế độ so sánh 2 hàm greedy và better_greedy
 + flag `-n 10` sô lượng input (thay 10 bằng số nhỏ hơn 101 để chỉnh lượng input)  
+
 Ta thấy khi không dùng forward checking và most constrained variable thì `more_better_heristic_domain` nhanh hơn rất nhiều
 
 
