@@ -1,6 +1,7 @@
 import string
 import random
 
+
 class Input:
     @classmethod
     def get_dictionary(self):
@@ -23,6 +24,7 @@ class Input:
                 frequency_list[line[0]+line[2]] = float(line[4:actLen])
         return frequency_list
         """
+
     @classmethod
     def get_new_frequency_list(self, filename):
         file1 = open(filename)
@@ -30,7 +32,7 @@ class Input:
         with file1 as f:
             for line in f:
                 pair_freq = []
-                actLen = len(line)-1
+                actLen = len(line) - 1
                 line = line[:actLen]
                 array_line = line.split()
                 pair = array_line[0] + array_line[1]
@@ -55,7 +57,7 @@ class Input:
         s = []
         for i in range(3):
             w = []
-            for l in line[i*3:(i*3+3)]:
+            for l in line[i * 3:(i * 3 + 3)]:
                 w.append(str(l))
             s.append(w)
         return s

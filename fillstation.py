@@ -11,7 +11,7 @@ from assignment import Assignment
 from constraint import Constraint
 from csp import Csp
 from domain import Domain
-
+from newton import get_ebf
 
 def is_consitency_value(assignment, csp, x, v):
     if not assignment.is_diff_all(v):
@@ -28,7 +28,7 @@ def is_consitency_value(assignment, csp, x, v):
                 w += assignment.value_to_letter(assignment.get_value(node))
             else:
                 w += assignment.value_to_letter(v)
-        if len(w) == assignment.length-1:
+        if len(w) == assignment.length - 1:
             if csp.is_use_better_greedy():
                 pair_position = csp.get_position_pair(x, bi_pair_node)
                 if not csp.is_positive_frequency_by_position(w, pair_position):
@@ -40,6 +40,7 @@ def is_consitency_value(assignment, csp, x, v):
             if not csp.is_in_dictionary(w):
                 return False
     return True
+
 
 def forward_checking(assignment, csp, domain, x):
     new_domain = {}
@@ -67,11 +68,12 @@ def forward_checking(assignment, csp, domain, x):
             new_domain[uax] = domain[uax]
     return new_domain
 
+
 def greedy_heristic_domain(assignment, csp, domain, x):
     result = []
     greedy_info = []
     priority_queue = PriorityQueue()
-    left_neighbor = assignment.get_left_neighbor(x) 
+    left_neighbor = assignment.get_left_neighbor(x)
     letter_left_neighbor = ''
     if left_neighbor is None:
         letter_left_neighbor = '$'
@@ -79,7 +81,7 @@ def greedy_heristic_domain(assignment, csp, domain, x):
         value_l_neighbor = assignment.get_value(left_neighbor)
         letter_left_neighbor = assignment.value_to_letter(value_l_neighbor)
     for v in domain[x]:
-        pair = letter_left_neighbor + assignment.value_to_letter(v) 
+        pair = letter_left_neighbor + assignment.value_to_letter(v)
         frequeyncy = csp.get_normal_pair_frequency(pair)
         priority_queue.push((v, frequeyncy), -frequeyncy)
     while not priority_queue.isEmpty():
@@ -88,11 +90,12 @@ def greedy_heristic_domain(assignment, csp, domain, x):
         greedy_info.append(f)
     return result, greedy_info
 
+
 def better_heristic_domain(assignment, csp, domain, x):
     result = []
     greedy_info = []
     priority_queue = PriorityQueue()
-    left_neighbor = assignment.get_left_neighbor(x) 
+    left_neighbor = assignment.get_left_neighbor(x)
     letter_left_neighbor = ''
 
     if left_neighbor is None:
@@ -160,19 +163,20 @@ def minimum_remaining_value(assignment, csp, domain, x):
     result = []
     priority_queue = PriorityQueue()
     for v in domain[x]:
-        assignment.assign(x,v)
+        assignment.assign(x, v)
         infer_domain = forward_checking(assignment, csp, domain, x)
         remaing_values = 0
         for unassigned_x in assignment.get_all_unassigned_variables():
             remaing_values += len(domain[unassigned_x])
         if remaing_values > 0:
-            priority_queue.push(v, 1-remaing_values)
+            priority_queue.push(v, 1 - remaing_values)
         else:
             priority_queue.push(v, 0)
         assignment.unassign(x)
     while not priority_queue.isEmpty():
         result.append(priority_queue.pop())
     return result
+
 
 def get_most_constrained_variable(assignment, domain):
     unassigned_variables = assignment.get_all_unassigned_variables()
@@ -182,12 +186,14 @@ def get_most_constrained_variable(assignment, domain):
             most_variable = x
     return most_variable
 
+
 def select_unassigned_variable(assignment, csp, domain):
     if csp.most_variable == "no":
         return assignment.get_all_unassigned_variables()[0]
     if csp.most_variable == "yes":
         return get_most_constrained_variable(assignment, domain)
-    
+
+
 def get_domain_by_variable(assignment, csp, domain, x):
     if (csp.value_heuristic == "no"):
         return domain[x], []
@@ -198,9 +204,10 @@ def get_domain_by_variable(assignment, csp, domain, x):
     if (csp.value_heuristic == "more_better"):
         return more_better_heristic_domain(assignment, csp, domain, x)
 
+
 def back_track(assignment, csp, domain):
     csp.number_expanded_nodes += 1
-   
+
     if assignment.is_complete():
         return assignment, csp
 
@@ -213,7 +220,7 @@ def back_track(assignment, csp, domain):
     for v in order_domain:
         if (is_consitency_value(assignment, csp, x, v)):
             assignment.assign(x, v)
-            if(csp.fwck == 1):
+            if (csp.fwck == 1):
                 inference_domain = forward_checking(assignment, csp, domain, x)
                 if inference_domain:
                     result = back_track(assignment, csp, inference_domain)
@@ -225,6 +232,7 @@ def back_track(assignment, csp, domain):
                     return result
             assignment.unassign(x)
     return False
+
 
 def back_tracking(letters, debug, value_heuristic="no", most_variable="no", fwck=0):
     dictionary, frequecy_list = Input.get_source()
@@ -243,6 +251,7 @@ def back_tracking(letters, debug, value_heuristic="no", most_variable="no", fwck
     domain = Domain.get_default_domain(3)
 
     return back_track(assignment, csp, domain)
+
 
 def main(argv):
     problem = 1
@@ -274,11 +283,11 @@ def main(argv):
         if flag == '-n':
             number_compare_inputs = int(value)
 
-    if(compare_mode):
+    if (compare_mode):
         lot_of_letters = Input.get_letter_matrix("1000_inputs")
         info = []
         r = randint(0, 900)
-        for p in lot_of_letters[r:(r+number_compare_inputs)]:
+        for p in lot_of_letters[r:(r + number_compare_inputs)]:
             start_time1 = time.time()
             result_greedy = back_tracking(p, 0, "greedy", most_variable, fwck)
             finished_time1 = time.time()
@@ -289,15 +298,16 @@ def main(argv):
             a2, c2 = result_better_greedy
             total_time1 = finished_time1 - start_time1
             total_time2 = finished_time2 - start_time2
-            ebf1 = c1.number_expanded_nodes**(1/9)
-            ebf2 = c2.number_expanded_nodes**(1/9)
-            info.append((c1.number_expanded_nodes, c2.number_expanded_nodes, round(total_time1,9), round(total_time2,9), round(ebf1,9), round(ebf2,9)))
-        Niceprint.print_row_compare(info,number_compare_inputs)
+            ebf1 = get_ebf(c1.number_expanded_nodes, 0.001)
+            ebf2 = get_ebf(c2.number_expanded_nodes, 0.001)
+            info.append((c1.number_expanded_nodes, c2.number_expanded_nodes, round(total_time1, 9),
+                         round(total_time2, 9), round(ebf1, 9), round(ebf2, 9)))
+        Niceprint.print_row_compare(info, number_compare_inputs)
     else:
         letters = Input.get_letter_matrix("letters")
         start_time = time.time()
-      
-        result = back_tracking(letters[problem-1], debug, value_heuristic, most_variable, fwck)
+
+        result = back_tracking(letters[problem - 1], debug, value_heuristic, most_variable, fwck)
         finished_time = time.time()
         if result:
             a, c = result
@@ -306,27 +316,9 @@ def main(argv):
             print "Total time:", finished_time - start_time
             a.nice_print()
         else:
-            print 
+            print
             print "No solution"
-    
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
